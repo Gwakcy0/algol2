@@ -7,6 +7,7 @@ import sys
 from itertools import combinations
 import cProfile
 
+
 def dist(p1, p2):
     return abs(p1[0]-p2[0]) + abs(p1[1]-p2[1]) + abs(p1[2]-p2[2])
 
@@ -75,20 +76,23 @@ def min_dist(pts, coord=0, delta=None):
 if __name__ == '__main__':
     # set recursion limit
     sys.setrecursionlimit(1000000)
+    sys.stdin = open('input.txt', 'r')
 
     # receive input data
-    n_test = int(input())
+    n_test = int(sys.stdin.readline())
     testcases = []
 
     for _ in range(n_test):
-        n_point = int(input())
+        n_point = int(sys.stdin.readline())
         points = []
         for _ in range(n_point):
-            points.append(tuple(map(int, input().split())))
+            points.append(tuple(map(int, sys.stdin.readline().split())))
         testcases.append(points)
 
     # evaluate data
     for points in testcases:
+        # print(min_dist(points))
         cProfile.run('print(min_dist(points))')
+
 
 
