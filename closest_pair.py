@@ -9,34 +9,34 @@ from operator import itemgetter
 from bisect import bisect_left, bisect_right
 import cProfile
 
-
-# find the index such that val < lst[i]
-def binary_search_left(lst, val, axis, left=None, right=None):
-    if not left:
-        left = 0
-    if not right:
-        right = len(lst)
-    if left >= right:
-        return left
-    median = left + (right - left) // 2
-    if lst[median][axis] < val:
-        return binary_search_left(lst, val, axis, median+1, right)
-    else:
-        return binary_search_left(lst, val, axis, left, median)
+from collections import namedtuple
+from pprint import pformat
 
 
-def binary_search_right(lst, val, axis, left=None, right=None):
-    if not left:
-        left = 0
-    if not right:
-        right = len(lst)
-    if left >= right:
-        return right
-    median = left + (right - left) // 2
-    if lst[median][axis] > val:
-        return binary_search_right(lst, val, axis, left, median)
-    else:
-        return binary_search_right(lst, val, axis, median+1, right)
+# use k-d_tree structure defined in https://en.wikipedia.org/wiki/K-d_tree
+class Node(namedtuple("Node", "location left_child right_child")):
+    def __repr__(self):
+        return pformat(tuple(self))
+
+
+def kdtree(point_list, depth: int = 0):
+    if not point_list:
+        return None
+
+    k = len(point_list[0])  # assumes all points have the same dimension
+    # Select axis based on depth so that axis cycles through all valid values
+    axis = depth % k
+
+    # Sort point list by axis and choose median as pivot element
+    point_list.sort(key=itemgetter(axis))
+    median = len(point_list) // 2
+
+    # Create node and construct subtrees
+    return Node(
+        location=point_list[median],
+        left_child=kdtree(point_list[:median], depth + 1),
+        right_child=kdtree(point_list[median + 1 :], depth + 1),
+    )
 
 
 # distance between two points
@@ -48,17 +48,15 @@ def dist(p1, p2):
 def min_dist_brute_force(pts, delta=None):
     if not pts:
         return delta
-    if delta is None:
-        delta = dist(pts[0], pts[1])
     for p1, p2 in combinations(pts, 2):
         d = dist(p1, p2)
-        if delta > d:
+        if delta and delta > d:
             delta = d
     return delta
 
 
 # distance between two bipartite set
-def min_dist_bipartite(pts1, pts2, delta=None):
+def min_dist_bipartite(pts1, pts2, axis=0, delta=None):
     if not pts1 or not pts2:
         return delta
     if delta is None:
@@ -108,19 +106,19 @@ def min_dist(pts, axis=0, delta=None):
 
     # calculate distance in that region
     # print('pts_within', pts_within)
-    delta_within = min_dist(pts[i:j], new_axis, delta)
-    # if axis < 2:
-    #     delta_within = min_dist(pts_within, axis + 1, delta)
-    # else:
-    #     delta_within = min_dist_brute_force(pts)
+    # delta_within = min_dist_bipartite(pts[i:piv_idx], pts[piv_idx:j], new_axis, delta)
+    #
+    # if delta_within < delta:
+    #     delta = delta_within
     # delta = min(delta, delta_within)
 
-    return min(delta, delta_within)
+    return delta
+
 
 if __name__ == '__main__':
     # set recursion limit
     sys.setrecursionlimit(10000000)
-    #sys.stdin = open('input.txt', 'r')
+    sys.stdin = open('input.txt', 'r')
 
     # receive input data
     n_test = int(sys.stdin.readline())
@@ -135,8 +133,11 @@ if __name__ == '__main__':
 
     # evaluate data
     for points in testcases:
-        print(min_dist(points))
-        # cProfile.run('print(min_dist(points))')
+        cProfile.run('tree = kdtree(points)')
+        # tree = kdtree(points)
+        # print(tree.location)
+        # print(min_dist(points))
+        #cProfile.run('print(min_dist(points))')
 
 
 
