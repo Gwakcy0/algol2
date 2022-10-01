@@ -2,7 +2,7 @@ from random import randint
 
 f = open('input.txt', 'w')
 
-n = 100000
+n = 10000000
 f.write('1\n')
 f.write(f'{n}\n')
 
